@@ -14,7 +14,8 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     var myStarWarArray = [Results]()
     var myHomeWorld = String()
     var myPagination = String()
-     
+    var isPagination = false
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         swTable.delegate = self
@@ -52,9 +53,10 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         cell.homeChar.text = myHomeWorld
         
         //Initiate Pagination
-        if indexPath.item == myStarWarArray.count - 1{
+        if indexPath.item == myStarWarArray.count - 1 && !isPagination{
+            
             if let url = URL(string: myPagination){
-                
+                self.isPagination = true
                 var getRequest = URLRequest(url: url)
                 getRequest.httpMethod = "GET"
                 
@@ -65,7 +67,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                         do{
                             let jsonDecode = try? decoder.decode(StarWarModel.self, from: thisData)
                             self.myStarWarArray = (jsonDecode!.results!)
-                            self.myPagination = jsonDecode!.next!
+                            self.myPagination = (jsonDecode?.next!)
                             
                             DispatchQueue.main.async {
                                 self.swTable.reloadData()
@@ -81,6 +83,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                 }
                 perfom.resume()
             }
+            self.isPagination = false
             
         }
         return cell
