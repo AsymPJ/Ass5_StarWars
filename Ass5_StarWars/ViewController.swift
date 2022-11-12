@@ -10,12 +10,10 @@ import UIKit
 class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource{
     
     @IBOutlet weak var swTable: UITableView!
-    
-    
-    
-    
+
     var myStarWarArray = [Results]()
     var myHomeWorld = String()
+    var myPagination = String()
      
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -33,9 +31,9 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
             viewDetail.nameRef = myStarWarArray[indexPath!.row].name!
             viewDetail.eyeRef = myStarWarArray[indexPath!.row].eye_color!
             viewDetail.hairRef = myStarWarArray[indexPath!.row].hair_color!
-            viewDetail.homeworldRef = myStarWarArray[indexPath!.row].homeworld!
+            getHomeworld(myStarWarArray[indexPath!.row].homeworld!)
+            viewDetail.homeworldRef = myHomeWorld
             viewDetail.listRef = myStarWarArray[indexPath!.row].films!
-            
             
         }
     }
@@ -52,12 +50,46 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         cell.eyeColorChar.text = myStarWarArray[indexPath.row].eye_color
         getHomeworld(myStarWarArray[indexPath.row].homeworld!)
         cell.homeChar.text = myHomeWorld
+        
+        //Initiate Pagination
+        if indexPath.item == myStarWarArray.count - 1{
+            if let url = URL(string: myPagination){
+                
+                var getRequest = URLRequest(url: url)
+                getRequest.httpMethod = "GET"
+                
+                let perfom = URLSession.shared.dataTask(with: getRequest){data, response, error in
+                    
+                    if let thisData = data{
+                        let decoder = JSONDecoder()
+                        do{
+                            let jsonDecode = try? decoder.decode(StarWarModel.self, from: thisData)
+                            self.myStarWarArray = (jsonDecode!.results!)
+                            self.myPagination = jsonDecode!.next!
+                            
+                            DispatchQueue.main.async {
+                                self.swTable.reloadData()
+                            }
+                            
+                        }catch{
+                            let alert = UIAlertController(title:"NOT FOUND", message: "Enter a valid URl", preferredStyle: .alert)
+                            alert.addAction(UIAlertAction(title: "Dismiss", style: .default))
+                            self.present(alert, animated: true)
+                        }
+                    }
+                    
+                }
+                perfom.resume()
+            }
+            
+        }
         return cell
+        
     }
     
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 225
+        return 200
     }
     
     func getHomeworld (_ hWString: String){
@@ -72,10 +104,8 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                 let decoder = JSONDecoder()
                 do{
                     let newDecode = try? decoder.decode(HomeWorldModel.self, from: newData)
-                    self.myHomeWorld = (newDecode?.name)!
-                    DispatchQueue.main.async {
-                        self.swTable.reloadData()
-                    }
+                    self.myHomeWorld = newDecode!.name
+                   
                 }catch{
                     let alert = UIAlertController(title:"NOT FOUND", message: "Enter a valid URl", preferredStyle: .alert)
                     alert.addAction(UIAlertAction(title: "Dismiss", style: .default))
@@ -101,7 +131,8 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                 do{
                     let jsonDecode = try? decoder.decode(StarWarModel.self, from: thisData)
                     self.myStarWarArray = (jsonDecode!.results!)
-            
+                    self.myPagination = jsonDecode!.next!
+                    
                     DispatchQueue.main.async {
                         self.swTable.reloadData()
                     }

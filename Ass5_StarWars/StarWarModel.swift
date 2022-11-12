@@ -8,6 +8,7 @@
 import Foundation
 
 struct StarWarModel: Codable {
+    let next : String?
     let results : [Results]?
 }
 

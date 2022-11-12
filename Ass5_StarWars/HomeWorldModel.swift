@@ -8,5 +8,5 @@
 import Foundation
 
 struct HomeWorldModel: Codable {
-    let name : String?
+    let name : String
 }
