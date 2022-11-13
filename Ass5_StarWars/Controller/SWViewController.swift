@@ -24,6 +24,7 @@ class SWViewController: UIViewController {
     var eyeRef = ""
     var homeworldRef = ""
     var listRef = [String]()
+    var filmTitle = String()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -37,8 +38,28 @@ class SWViewController: UIViewController {
     }
     
     func showFilms (){
+        
         for i in listRef{
-            listMovies.text += i
+            guard let url = URL(string: i) else {
+                return
+            }
+            var filmsRequest = URLRequest(url: url)
+            filmsRequest.httpMethod = "GET"
+            
+            let taskFilm = URLSession.shared.dataTask(with: filmsRequest){data, response, error in
+                if let data = data{
+                    let decodeFilms = JSONDecoder()
+                    
+                    let filmJson = try? decodeFilms.decode(FilmsModel.self, from: data)
+                    self.filmTitle = filmJson!.title!
+                    self.listMovies.text += self.filmTitle + "\n"
+                        
+                }
+            }
+            taskFilm.resume()
+            
+            
+            
         }
     }
 

@@ -12,7 +12,9 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     @IBOutlet weak var swTable: UITableView!
 
     var myStarWarArray = [Results]()
-    var myHomeWorld = String()
+    var myHomeWorld = [String]()
+    var builHomeWorldArray = String()
+    var myIndex = Int()
     var myPagination = String()
     var isPagination = false
     
@@ -26,14 +28,13 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?){
         if segue.identifier == "sWSegue" {
-            var viewDetail = segue.destination as! SWViewController
+            let viewDetail = segue.destination as! SWViewController
             let cell = sender as! StarWTableViewCell
             let indexPath = swTable.indexPath(for: cell)
             viewDetail.nameRef = myStarWarArray[indexPath!.row].name!
             viewDetail.eyeRef = myStarWarArray[indexPath!.row].eye_color!
             viewDetail.hairRef = myStarWarArray[indexPath!.row].hair_color!
-            getHomeworld(myStarWarArray[indexPath!.row].homeworld!)
-            viewDetail.homeworldRef = myHomeWorld
+            viewDetail.homeworldRef = myHomeWorld[indexPath!.row]
             viewDetail.listRef = myStarWarArray[indexPath!.row].films!
             
         }
@@ -49,8 +50,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         cell.nameCharacter.text = myStarWarArray[indexPath.row].name
         cell.hairColorChar.text = myStarWarArray[indexPath.row].hair_color
         cell.eyeColorChar.text = myStarWarArray[indexPath.row].eye_color
-        getHomeworld(myStarWarArray[indexPath.row].homeworld!)
-        cell.homeChar.text = myHomeWorld
+        cell.homeChar.text = myHomeWorld[indexPath.row]
         
         //Initiate Pagination
         if indexPath.item == myStarWarArray.count - 1 && !isPagination{
@@ -66,9 +66,11 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                         let decoder = JSONDecoder()
                         do{
                             let jsonDecode = try? decoder.decode(StarWarModel.self, from: thisData)
-                            self.myStarWarArray = (jsonDecode!.results!)
-                            self.myPagination = (jsonDecode?.next!)
-                            
+                            self.myStarWarArray.append(contentsOf: jsonDecode!.results!)
+                            guard let newPagination = jsonDecode?.next else{
+                                return
+                            }
+                            self.myPagination = newPagination
                             DispatchQueue.main.async {
                                 self.swTable.reloadData()
                             }
@@ -77,6 +79,11 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                             let alert = UIAlertController(title:"NOT FOUND", message: "Enter a valid URl", preferredStyle: .alert)
                             alert.addAction(UIAlertAction(title: "Dismiss", style: .default))
                             self.present(alert, animated: true)
+                        }
+                        for i in self.myStarWarArray{
+                            self.getHomeworld(i.homeworld!)
+                            self.myHomeWorld.append(self.builHomeWorldArray)
+                            
                         }
                     }
                     
@@ -95,20 +102,22 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         return 200
     }
     
-    func getHomeworld (_ hWString: String){
+    func getHomeworld (_ hWString: String) {
         guard let url  = URL(string: hWString) else{
             return
         }
-        var getRequest = URLRequest(url: url)
-        getRequest.httpMethod = "GET"
+        var getRequest1 = URLRequest(url: url)
+        getRequest1.httpMethod = "GET"
         
-        let task = URLSession.shared.dataTask(with: getRequest){data, response, error in
-            if let newData = data{
+        let task = URLSession.shared.dataTask(with: getRequest1){data1, response1, error1 in
+            if let newData = data1{
                 let decoder = JSONDecoder()
                 do{
                     let newDecode = try? decoder.decode(HomeWorldModel.self, from: newData)
-                    self.myHomeWorld = newDecode!.name
-                   
+                    self.builHomeWorldArray = newDecode!.name
+                    self.myHomeWorld.insert(self.builHomeWorldArray, at: self.myIndex)
+                    self.myIndex += 1
+                    
                 }catch{
                     let alert = UIAlertController(title:"NOT FOUND", message: "Enter a valid URl", preferredStyle: .alert)
                     alert.addAction(UIAlertAction(title: "Dismiss", style: .default))
@@ -145,11 +154,16 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                     alert.addAction(UIAlertAction(title: "Dismiss", style: .default))
                     self.present(alert, animated: true)
                 }
+                for i in self.myStarWarArray{
+                    self.getHomeworld(i.homeworld!)
+                    self.myHomeWorld.append(self.builHomeWorldArray)
+                    
+                }
             }
             
         }
         perfom.resume()
     }
-
+    
 }
 
