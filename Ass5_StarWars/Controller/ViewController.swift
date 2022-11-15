@@ -17,12 +17,13 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     var myIndex = Int()
     var myPagination = String()
     var isPagination = false
+    var fetchPeople = "https://swapi.dev/api/people/"
     
     override func viewDidLoad() {
         super.viewDidLoad()
         swTable.delegate = self
         swTable.dataSource = self
-        fillDataToTable()
+        fillDataToTable(fetchPeople)
         
     }
     
@@ -54,45 +55,10 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         
         //Initiate Pagination
         if indexPath.item == myStarWarArray.count - 1 && !isPagination{
-            
-            if let url = URL(string: myPagination){
-                self.isPagination = true
-                var getRequest = URLRequest(url: url)
-                getRequest.httpMethod = "GET"
-                
-                let perfom = URLSession.shared.dataTask(with: getRequest){data, response, error in
-                    
-                    if let thisData = data{
-                        let decoder = JSONDecoder()
-                        do{
-                            let jsonDecode = try? decoder.decode(StarWarModel.self, from: thisData)
-                            self.myStarWarArray.append(contentsOf: jsonDecode!.results!)
-                            guard let newPagination = jsonDecode?.next else{
-                                return
-                            }
-                            self.myPagination = newPagination
-                            DispatchQueue.main.async {
-                                self.swTable.reloadData()
-                            }
-                            
-                        }catch{
-                            let alert = UIAlertController(title:"NOT FOUND", message: "Enter a valid URl", preferredStyle: .alert)
-                            alert.addAction(UIAlertAction(title: "Dismiss", style: .default))
-                            self.present(alert, animated: true)
-                        }
-                        for i in self.myStarWarArray{
-                            self.getHomeworld(i.homeworld!)
-                            self.myHomeWorld.append(self.builHomeWorldArray)
-                            
-                        }
-                    }
-                    
-                }
-                perfom.resume()
-            }
-            self.isPagination = false
-            
+            self.isPagination = true
+            fillDataToTable(myPagination)
         }
+
         return cell
         
     }
@@ -128,8 +94,8 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         task.resume()
     }
     
-    func fillDataToTable (){
-        guard let url = URL(string: "https://swapi.dev/api/people/") else{
+        func fillDataToTable (_ urlToPass: String){
+        guard let url = URL(string: urlToPass) else{
             return
         }
         //let session = URLSession(configuration: .default)
@@ -144,7 +110,13 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                     let jsonDecode = try? decoder.decode(StarWarModel.self, from: thisData)
                     self.myStarWarArray = (jsonDecode!.results!)
                     self.myPagination = jsonDecode!.next!
-                    
+                    if self.isPagination == true{
+                        self.myStarWarArray.append(contentsOf: jsonDecode!.results!)
+                        guard let newPagination = jsonDecode?.next else{
+                            return
+                        }
+                        self.myPagination = newPagination
+                    }
                     DispatchQueue.main.async {
                         self.swTable.reloadData()
                     }

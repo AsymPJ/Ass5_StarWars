@@ -62,7 +62,6 @@
 			children = (
 				76CF34A4291F15F0005C4D6B /* ViewController.swift */,
 				769A7596291FFD470072F218 /* SWViewController.swift */,
-				76CF34B6291F3B67005C4D6B /* StarWTableViewCell.swift */,
 			);
 			path = Controller;
 			sourceTree = "<group>";
@@ -71,6 +70,7 @@
 			isa = PBXGroup;
 			children = (
 				76CF34A6291F15F0005C4D6B /* Main.storyboard */,
+				76CF34B6291F3B67005C4D6B /* StarWTableViewCell.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
